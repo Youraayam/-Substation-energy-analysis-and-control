@@ -1,11 +1,6 @@
 # -Substation-energy-analysis-and-control
 This was the lab exercise where students were analyzing Energy of the substation rig based on the measurements; - Sizing of a PID controller; - Analysis of control setting for a PID controller; - Analysis of time delay in control
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 22 22:40:02 2023
 
-@author: aayam
-"""
 
 # -*- coding: utf-8 -*-
 """
@@ -206,6 +201,7 @@ corr1 = corr_matrix1[0,1]
 R_sq1 = corr1**2
 
 print(R_sq1)
+plt.text(0, 15, 'y = {} x + {}'.format(a, b))
 plt.annotate("r-squared = {:.3f}".format(R_sq1), (0, 13))
 
 plt.grid()
@@ -239,6 +235,7 @@ corr_matrix2 = numpy.corrcoef(P_SH_vent,V_power)
 corr2 = corr_matrix2[0,1]
 R_sq2 = corr2**2
 print(R_sq2)
+plt.text(1, 4.5, 'y = {} x + {}'.format(c, d))
 plt.annotate("r-squared = {:.3f}".format(R_sq2), (1, 5))
 plt.title("Comparison between measured power and calculated power for ventilation at space heating")
 plt.xlabel("Measured Power(KW)")
@@ -276,7 +273,8 @@ corr_matrix3 = numpy.corrcoef(P_SH_rad,R_power)
 corr3 = corr_matrix3[0,1]
 R_sq3 = corr3**2
 print(R_sq3)
-plt.annotate("r-squared = {:.3f}".format(R_sq3), (8, 0))
+plt.text(6.5, 4, 'y = {} x + {}'.format(e, f))
+plt.annotate("r-squared = {:.3f}".format(R_sq3), (6.5, 2))
 plt.title("Comparison between measured power and calculated power for radiator at space heating")
 plt.xlabel("Measured Power(KW)")
 plt.ylabel("Calculated Power(KW)")
@@ -381,19 +379,142 @@ plt.show()
 
 #1.4
 
+
 heat_tap = (assignment_2['F210']*cp*(assignment_2['T113']-assignment_2['T147']))/3600
 plt.figure().set_figwidth(15)
-plt.plot(Times, heat_tap,'--b')
-plt.title("Power needed for hot water(total delivered_")
-plt.legend(['primary'])
-plt.xlabel("Time(Day|Hour|minute)")
+plt.plot(assignment_2['x'], heat_tap,'--b')
+plt.title("Power needed for hot water(total delivered)")
+plt.legend(['Water Power(KW)'])
+plt.xlabel("Time(sec)")
 plt.ylabel("Power (KW)")
 plt.xticks(rotation=45)
 x_axis = assignment_2['x']
-area_tap = numpy.trapz(heat_tap, x_axis , dx =1)/3600
+plt.fill_between(x_axis,heat_tap,where = (x_axis>= 1350) & (x_axis <= 3000), color='green')
+idx = numpy.where((numpy.array(x_axis)>=1350) & (numpy.array(x_axis)<=3000))
+area_tap = numpy.trapz(y= numpy.array(heat_tap)[idx], x=numpy.array(x_axis)[idx])/3600
 print(area_tap)
-plt.annotate("Energy used = {:.3f}".format(area_tap), (1, 15))
+plt.annotate("Energy used denoted by green shaded region = {:.3f} KWh".format(area_tap), (1, 15))
 plt.grid()
 plt.show()
+
+#1.5
+
+heat_vent = P_SH_vent
+plt.figure().set_figwidth(15)
+plt.plot(assignment_2['x'],heat_vent ,'--b')
+plt.title("Power needed for Ventilation(total delivered)")
+plt.legend(['Vent Power(KW)'])
+plt.xlabel("Time(sec)")
+plt.ylabel("Power (KW)")
+plt.xticks(rotation=45)
+x_axis = assignment_2['x']
+
+plt.fill_between(x_axis,heat_vent,where = (x_axis>= 0) & (x_axis <= 1500), color='green')
+idx = numpy.where((numpy.array(x_axis)>=0) & (numpy.array(x_axis)<=1500))
+plt.fill_between(x_axis,heat_vent,where = (x_axis>= 2500) & (x_axis <= 3824), color='green')
+idx2 = numpy.where((numpy.array(x_axis)>=2500) & (numpy.array(x_axis)<=3824))
+
+area_vent1 = numpy.trapz(y= numpy.array(heat_vent)[idx], x=numpy.array(x_axis)[idx])
+area_vent2 = numpy.trapz(y= numpy.array(heat_vent)[idx2], x=numpy.array(x_axis)[idx2])
+area_vent = (area_vent1 + area_vent2)/3600
+
+print(area_vent)
+
+plt.annotate("Instant energy used  denoted by green shaded region= {:.3f} KWh".format(area_vent), (500, 5))
+
+plt.grid()
+plt.show()
+
+
+#1.6
+
+R_flow = assignment_2['F205']
+R_temp_d = assignment_2['Trin1']-assignment_2['TEO7ut']
+R_power = P_SH_rad
+fig, ax = plt.subplots(figsize = (10, 5))
+plt.title("Times vs flow and Times vs change in temperature")
+ax2 = ax.twinx()
+ax.plot(Times,R_flow,"--r")
+ax2.plot(Times,R_temp_d,"--g")
+ax.set_xlabel("Time(Day|Hour|minute)")
+ax.set_ylabel('Flow (kg/h)',color = 'r')
+ax2.set_ylabel('Temp (K)',color = 'g')
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+plt.figure().set_figwidth(15)
+plt.scatter(R_temp_d,R_power)
+plt.title("Plotting power of radiator as function of temperature difference")
+plt.xlabel("Tempearture difference (K)")
+plt.ylabel("Power (KW)")
+n, m = numpy.polyfit(R_temp_d,R_power,1)
+plt.plot(R_temp_d,n*R_temp_d+m)
+corr_matrix4 = numpy.corrcoef(R_temp_d,R_power)
+corr4 = corr_matrix4[0,1]
+R_sq4 = corr4**2
+print(R_sq4)
+plt.text(10, 8, 'y = {} x  {}'.format(n, m))
+plt.annotate("r-squared = {:.3f}".format(R_sq4), (10, 6.5))
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+
+plt.figure().set_figwidth(15)
+plt.scatter(R_flow,R_power)
+plt.title("Plotting power of radiator as function of flow")
+plt.xlabel("Flow (kg/h)")
+plt.ylabel("Power (KW)")
+ø, æ = numpy.polyfit(R_flow,R_power,1)
+plt.plot(R_flow,ø*R_flow+æ )
+corr_matrix5 = numpy.corrcoef(R_flow,R_power)
+corr5 = corr_matrix5[0,1]
+R_sq5 = corr5**2
+print(R_sq5)
+plt.text(8, 8, 'y = {} x + {}'.format(ø, æ))
+plt.annotate("r-squared = {:.3f}".format(R_sq5), (8, 10))
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+#1.7
+
+Current = assignment_2["JP2"]
+Voltage = 230
+Power_pump = (Current * Voltage)/1000
+plt.figure().set_figwidth(15)
+plt.plot(Times, Power_pump,'--')
+plt.title("Pump power(KW)")
+plt.xlabel("Time(Day|Hour|minute)")
+plt.ylabel("Power (KW)")
+plt.legend(['Pump Power(KW)'])
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+plt.figure().set_figwidth(15)
+plt.scatter(assignment_2["FEO1"],Power_pump)
+a1, b1 = numpy.polyfit(assignment_2["FEO1"],Power_pump,1)
+plt.plot(assignment_2["FEO1"],a1*assignment_2["FEO1"]+ b1  )
+plt.title("Relationship between pump flow and power (KW)")
+plt.xlabel("Flow (Kg/h)")
+plt.ylabel("Power (KW)")
+corr_matrix6 = numpy.corrcoef(assignment_2["FEO1"],Power_pump)
+corr6 = corr_matrix6[0,1]
+R_sq6 = corr6**2
+print(R_sq6)
+plt.text(300, 0.077, 'y = {} x + {}'.format(a1, b1))
+plt.annotate("Correlation is = {:.3f}".format(R_sq6), (0,0.081))
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+
 
 
